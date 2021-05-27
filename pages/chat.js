@@ -1,39 +1,86 @@
 import React, { useState, useEffect } from 'react';
 import tailwind from 'tailwind-rn';
-import { View, ScrollView, Text, Image, StyleSheet, SafeAreaView, TextInput,TouchableOpacity } from 'react-native';
+import { View, ScrollView, Text, Image, StyleSheet, SafeAreaView, TextInput,TouchableOpacity, AsyncStorage } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
+import chat_api from "../api/chat_api";
+import io from "socket.io-client";
+import uuid from 'react-native-uuid';
 
-
-
+const socket = io("http://1bcfb498552c.ngrok.io/", { transports: ['websocket'] });
 const Chat = (props) => {
 
 const [message, setMessage] = useState({});
 const [messages, setMessages] = useState([]);
+const [received, setReceived] = useState();
+const [user,setUser] = useState({"attributes":{"sn":[0]}});
+const {friend} = props.route.params;
+
+
+useEffect(()=>{
+
+       async function test(){
+       try{
+        const loggedUser = JSON.parse(await AsyncStorage.getItem("loggedUser"));
+
+        setUser(loggedUser);
+
+}catch{(err)=>console.log(err)}
+        }test();},[user]);
+
 
 
   const handle_message_change=(text)=>{
-    setMessage({sent: true,message: text})
-    console.log(message)
+    setMessage({receiver: friend.user,source:user.attributes.sn[0],message: text})
   }
+
+
+
 
   const sendMessage=(text)=>{
       if (message !=""){
-        setMessages(messages => [...messages, message]);
-        setMessage("")
-        messages.map((message) => console.log(message));
-      }
+        //setMessages(messages => [...messages, message]);
 
+        chat_api
+        .chat()
+        .sendMessage(message.message,message.receiver,message.source)
+        setMessage({message: ""})
+console.log("sending")
+      }
     }
 
-    renderMessages=()=>{
-        return messages.map((message) => {
-            return (<>
-             {message.sent
-                    ? <Text key="1" style={styles.sent}>{message.message}</Text>
-                    : <Text key="2" style={styles.received}>{message.message}</Text>
-                  }</>
-                          )
+    useEffect(()=>{
+
+      function getMessage(){
+        socket.on("custom_receive", (message) => {
+        setReceived(message);
+        console.log('receiving')
+        //console.log(message)
+        setMessages(messages => [...messages, message]);
+        });
+      }
+
+    getMessage();},[]);
+
+
+
+
+
+
+  const  renderMessages=()=>{
+
+        return messages.map((message,i) => {
+        //console.log(message)
+       // return (<Text key={i} style={styles.sent}>{message.message}</Text>)
+            if(message.source == user.attributes.sn[0]){
+                   return (<Text key={i} style={styles.sent}>{message.message}</Text>)
+
+            }else if(message.receiver == user.attributes.sn[0]){
+                return (<Text key={i} style={styles.received}>{message.message}</Text>)
+            }
+
+
             })
+
 
     }
 
@@ -48,7 +95,7 @@ const [messages, setMessages] = useState([]);
                         <AntDesign name="arrowleft" size={26} color="#fff" />
                         </TouchableOpacity>
                         <Image style={styles.user_image} source={require('../assets/user1.png')} />
-                            username
+                            {friend.user}
 
 
 
@@ -59,7 +106,9 @@ const [messages, setMessages] = useState([]);
 
     <SafeAreaView style={styles.conversation}>
     <ScrollView>
+
     <Text style={styles.pink_box}>Today</Text>
+
 {renderMessages()}
 
 
@@ -71,7 +120,7 @@ const [messages, setMessages] = useState([]);
           placeholder="Type a message"
           placeholderTextColor="#fff"
           onChangeText={text => handle_message_change(text)}
-          value={message}
+          value={message.message}
           />
           <TouchableOpacity style={styles.button} onPress={sendMessage}>
                   <AntDesign style={{flex:1,marginTop:30,marginLeft:10}} name="rightcircle" size={30} color="#FF2067" />
@@ -99,6 +148,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#183361',
     alignItems: 'center',
     justifyContent: 'center',
+
   },
 
   container: {
@@ -157,7 +207,7 @@ user_image: {
              minHeight:30,
              flexDirection: 'row',
              alignSelf:'flex-start',
-             padding:5,
+             padding:10,
              margin:3,
 
       },
@@ -173,7 +223,7 @@ user_image: {
         minHeight:30,
         flexDirection: 'row',
         alignSelf:'flex-end',
-        padding:5,
+        padding:10,
         margin:3,
 
      },

@@ -1,10 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import tailwind from 'tailwind-rn';
-import { View, ScrollView, SafeAreaView, Text, TextInput, Image, StyleSheet, FlatList, TouchableOpacity,Button } from 'react-native';
+import { View, ScrollView, SafeAreaView, Text, TextInput, Image, StyleSheet, FlatList, TouchableOpacity, AsyncStorage } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
 import { Entypo } from '@expo/vector-icons';
+import chat_api from "../api/chat_api";
+import io from "socket.io-client";
+
+const socket = io("http://1bcfb498552c.ngrok.io/", { transports: ['websocket'] });
 
 const Users = (props) => {
+
+const [users, setUsers] = useState([]);
+const [user,setUser] = useState();
 const DATA = [
   {
     id: 'bd7acbea-c1b1-46c2-aed5-3ad53abb28ba',
@@ -27,13 +34,100 @@ const DATA = [
         id: '58694a0f-3da1-471f-bd96-145571e29d72',
         title: 'user22',
       },
-{
-        id: '',
-        title: 'testUser',
-      },
+       {
+              id: '',
+              title: 'user22',
+            },
+
 ];
 
+useEffect(()=>{
 
+      function getUsers(){
+        socket.on("broadcast_connect", (users) => {
+        setUsers(users["connected_users"]);
+        console.log('broadcasting connect')
+
+        });
+         socket.on("broadcast_disconnect", (users) => {
+                setUsers(users["connected_users"]);
+
+                });
+
+      }getUsers();},[]);
+
+
+useEffect(() => {
+  async function custom_disconnect(){
+    if(user!=null){
+           try{
+           await chat_api
+                           .chat()
+                           .disconnect(user)
+           }catch{(err)=>console.log(err)}
+                setUser(null)
+    }
+  }
+  custom_disconnect();
+}, [user]);
+
+
+const logout=async()=>{
+
+     try {
+     const u = await AsyncStorage.getItem("loggedUser")
+            setUser(u);
+              await AsyncStorage.removeItem("loggedUser");
+                console.log('disconnected')
+              props.navigation.navigate("Login")
+           } catch (error) {
+             console.log("Something went wrong", error);
+           }
+}
+
+const show_users=()=>{
+
+
+if(users.length!=0){
+users.map((user,i) => {
+        console.log(user);
+
+
+            })
+}
+
+}
+
+
+const renderUsers=()=>{
+
+
+if(users.length!=0){
+
+return users.map((user,i) => {
+        return(
+        <View
+                                        style={{
+                                          width:'33%',
+
+                                          marginBottom: 25,
+                                          alignItems:'center',
+
+
+                                        }}>
+
+                                      <Image style={styles.user_image} source={require('../assets/user1.png')} />
+                                      <TouchableOpacity onPress={()=>{props.navigation.navigate('Chat', {friend: {user},});}}>
+                                      <Text style={styles.username}>{user}</Text>
+</TouchableOpacity>
+                                      </View>
+        )
+
+
+            })
+}
+
+}
 
 
   return (
@@ -49,27 +143,7 @@ const DATA = [
 
         <SafeAreaView style={styles.list_users}>
 
-
-<FlatList
-  data={DATA}
-  renderItem={({ item }) => (
-  <View
-                        style={{
-                          flex:1,
-                          flexDirection: 'column',
-                          margin: 1,
-                          marginBottom: 25,
-                          alignItems:'center',
-
-                        }}>
-                        {item.id != ''? <><Image style={styles.user_image} source={require('../assets/user1.png')} /><Text style={styles.username}>{item.title}</Text></>: <View></View> }
-
-                      </View>
-  )}
-  //Setting the number of column
-  numColumns={3}
-  keyExtractor={(item, index) => index.toString()}
-/>
+{renderUsers()}
 
         </SafeAreaView>
       </View >
@@ -78,10 +152,10 @@ const DATA = [
 
      <View style={styles.menu} >
          <View style={tailwind('flex-row pb-0 w-full')}>
-         <TouchableOpacity style={tailwind('flex-1 items-center')} >
+         <TouchableOpacity style={tailwind('flex-1 items-center')} onPress={logout}>
                <Entypo name="log-out" size={24} color="#fff" />
          </TouchableOpacity>
-         <TouchableOpacity style={tailwind('flex-1 items-center')} >
+         <TouchableOpacity onPress={show_users} >
          <Entypo name="chat" size={24} color="#fff" />
 
          </TouchableOpacity>
@@ -116,6 +190,7 @@ const styles = StyleSheet.create({
       flexDirection: 'row',
       padding: '3%',
       flex:1,
+      flexWrap:'wrap',
   },
   username: {
         fontSize:15,

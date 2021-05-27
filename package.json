@@ -22,8 +22,10 @@
     "react-native-gesture-handler": "^1.10.3",
     "react-native-image-picker": "^3.8.0",
     "react-native-screens": "^3.3.0",
-    "react-native-web": "~0.13.12",
+    "react-native-uuid": "^2.0.1",
+    "react-native-web": "^0.16.3",
     "react-navigation": "^4.4.4",
+    "socket.io-client": "^2.1.1",
     "tailwind-rn": "^3.0.1"
   },
   "devDependencies": {

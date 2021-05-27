@@ -23,7 +23,7 @@ const Stack = createStackNavigator();
 function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Chat" screenOptions={{
+      <Stack.Navigator initialRouteName="Login" screenOptions={{
           headerShown: false
 
         }}>
