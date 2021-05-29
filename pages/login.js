@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import tailwind from 'tailwind-rn';
 import FormInput from "../components/form_input";
 import ButtonC from "../components/button";
-import { View, ScrollView, Text, StyleSheet, TouchableOpacity,Button } from 'react-native';
+import { View, ScrollView, Text, StyleSheet, TouchableOpacity,Button, AsyncStorage  } from 'react-native';
 import launchCamera from 'react-native-image-picker';
 import auth_api from "../api/auth_api";
-
+import chat_api from "../api/chat_api";
 
 
 
@@ -13,6 +13,26 @@ const Login = (props) => {
   const [username, setUsername] = useState();
   const [password, setPassword] =useState();
   const [error,setError] =useState();
+  const [user,setUser] = useState();
+
+useEffect(() => {
+  async function broadcast_connect(){
+    if(user!=null){
+           try{
+           await chat_api
+                           .chat()
+                           .connect(user)
+                           console.log("success broadcasting connected user")
+
+                           await AsyncStorage.setItem("loggedUser", user);
+
+           }catch{(err)=>console.log(err)}
+                setUser(null)
+    }
+  }
+  broadcast_connect();
+}, [user]);
+
 
   const handle_username_change=(text)=>{
     setUsername(text)
@@ -25,6 +45,7 @@ const Login = (props) => {
     const values = {
       username: username,
       password: password,
+      user: user,
     }
    if(!username || !password ){
     setError("All fields are required !")
@@ -48,16 +69,17 @@ const Login = (props) => {
         setError(response.data)
         return
       }
-       console.log("Authenticated") //to edit to active users list
-       setError("Autheticated")
+        setUser(JSON.stringify(response.data))
 
-      
+
+       console.log("Authenticated") //to edit to active users list
+        props.navigation.navigate("Users")
      })
      .catch((err)=>console.log(err))
 
-   
-
   }
+
+
   return (
 
     < ScrollView contentContainerStyle={styles.main_container}>
