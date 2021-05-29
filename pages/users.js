@@ -6,40 +6,13 @@ import { Entypo } from '@expo/vector-icons';
 import chat_api from "../api/chat_api";
 import io from "socket.io-client";
 
-const socket = io("http://0190a230c6d9.ngrok.io/", { transports: ['websocket'] });
+const socket = io("http://d2536cb415a4.ngrok.io/", { transports: ['websocket'] });
 
 const Users = (props) => {
 
 const [users, setUsers] = useState([]);
 const [user,setUser] = useState();
-const DATA = [
-  {
-    id: 'bd7acbea-c1b1-46c2-aed5-3ad53abb28ba',
-    title: 'ines.ouled',
-  },
-  {
-    id: '3ac68afc-c605-48d3-a4f8-fbd91aa97f63',
-    title: 'altafallah',
-  },
-  {
-    id: '58694a0f-3da1-471f-bd96-145571e29d72',
-    title: 'userX',
-  },
-  {
-      id: '58694a0f-3da1-471f-bd96-145571e29d72',
-      title: 'userY',
-    },
 
-    {
-        id: '58694a0f-3da1-471f-bd96-145571e29d72',
-        title: 'user22',
-      },
-       {
-              id: '',
-              title: 'user22',
-            },
-
-];
 
 useEffect(()=>{
 

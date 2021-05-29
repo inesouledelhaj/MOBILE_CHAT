@@ -2,16 +2,20 @@ import React, { useState, useEffect } from 'react';
 import tailwind from 'tailwind-rn';
 import FormInput from "../components/form_input";
 import ButtonC from "../components/button";
-import { View, ScrollView, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Alert, Modal, SafeAreaView,  Pressable, Clipboard, View, ScrollView, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import auth_api from "../api/auth_api";
+
 
 const Register = (props) => {
   const [fullname, setFullname] = useState();
   const [username, setUsername] = useState();
   const [password, setPassword] =useState();
-  const [re_password,setRe_password]=useState()
-  const [error,setError]=useState()
-  
+  const [re_password,setRe_password]=useState();
+  const [error,setError]=useState();
+  const [modalVisible, setModalVisible] = useState(false);
+  const [certificate, setCertificate] = useState('');
+
+
   const handle_fullname_change=(text)=>{
     setFullname(text)
   }
@@ -43,35 +47,88 @@ const Register = (props) => {
      setError("Passwords must match")
      return
    }
+
+
    await auth_api
      .auth()
      .register(values)
      .then((response)=>{
-       if (response.data==="User added successfully"){
-        props.navigation.navigate("Login")
-        return
-       }
-       if (response.data==="User added successfully"){
-        props.navigation.navigate("Login")
+       if (response.data==="Authentication error"){
+        setError("Authentication error")
         return
        }
        else if  (response.data==="User already exists"){
          setError(response.data)
          return
+       }else{
+
+       setCertificate(response.data);
+       setModalVisible(true);
+
+            return
        }
       
-        setError("Authentication error")
-        return
+
       
      })
      .catch((err)=>console.log(err))
-   
+
+
+
 
   }
+
+
+
+
+     const copyToClipboard = () => {
+         Clipboard.setString(certificate)
+       }
+
   return (
 
 
     < ScrollView contentContainerStyle={styles.main_container}>
+
+ <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => {
+          Alert.alert("Modal has been closed.");
+          setModalVisible(!modalVisible);
+        }}
+      >
+       <SafeAreaView>
+          <ScrollView>
+        <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+
+           <TouchableOpacity onPress={() => copyToClipboard()}>
+                     <Text style={{ fontWeight: 'bold',
+                                       textAlign: 'center',
+                                       fontSize: 20,
+                                       alignContent: 'center',
+                                       color: '#000',}}>Click here to copy your certificate</Text>
+                   </TouchableOpacity>
+            <Text style={styles.modalText}>{certificate}</Text>
+
+            <TouchableOpacity
+              onPress={()=>{setModalVisible(!modalVisible);props.navigation.navigate("Login");}}
+            >
+            <Text style={{ fontWeight: 'bold',
+                                                   textAlign: 'center',
+                                                   fontSize: 20,
+                                                   alignContent: 'center',
+                                                   color: '#000',}}>Close Modal</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+         </ScrollView>
+        </SafeAreaView>
+      </Modal>
+
+
 
     <View style={styles.container} >
       <View style={tailwind('items-center pt-20')}>
@@ -165,7 +222,35 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1
-  }
+  },
+
+
+   centeredView: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      marginTop: 22
+    },
+    modalView: {
+      margin: 20,
+      backgroundColor: "white",
+      borderRadius: 20,
+      padding: 35,
+      alignItems: "center",
+      shadowColor: "#000",
+      shadowOffset: {
+        width: 0,
+        height: 2
+      },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+      elevation: 5
+    },
+
+    modalText: {
+      marginBottom: 15,
+      textAlign: "center"
+    }
 
 
 

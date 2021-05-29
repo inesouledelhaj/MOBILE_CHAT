@@ -1,7 +1,7 @@
 import io from "socket.io-client";
 
 
-     const socket = io("http://0190a230c6d9.ngrok.io/", { transports: ['websocket'] });
+     const socket = io("http://d2536cb415a4.ngrok.io/", { transports: ['websocket'] });
 console.ignoredYellowBox = ['Setting a timer'];
     export default {
 
